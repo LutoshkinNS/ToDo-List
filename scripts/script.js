@@ -21,8 +21,6 @@ class ToDo {
 		this.addToStorage();
 	}
 
-
-
 	createItem(todo, key) {
 		const li = document.createElement('li');
 		li.classList.add('todo-item');
@@ -36,24 +34,28 @@ class ToDo {
 		</div>
 		`);
 
+		// Редактирование элемента
 		if (this.keyElem === key && this.targetElementClassName === 'todo-edit') {
 			const span = li.querySelector('span');
-			li.setAttribute('contenteditable', 'true');
+			span.setAttribute('contenteditable', 'true');
 			li.classList.add('border');
-			console.log(span.textContent);
-			li.addEventListener('input', setTimeout(() => {
-				console.log('span.textContent: ', span.textContent);
+			span.addEventListener('blur', () => {
 				todo.value = span.textContent;
 				span.textContent = todo.value;
-			}, 300));
+				li.classList.remove('border');
+				span.setAttribute('contenteditable', 'false');
+				this.addToStorage();
+			});
 		}
 
+		// Добавление элемента
 		if (todo.completed) {
 			this.todoCompleted.append(li);
 		} else {
 			this.todoList.append(li);
 		}
 
+		// Анимация перемещения элемента
 		if (this.keyElem === key && this.targetElementClassName === 'todo-complete') {
 			this.animate({
 				duration: 500,
@@ -64,11 +66,13 @@ class ToDo {
 					li.style.opacity = progress;
 				}
 			});
+			this.targetElementClassName = '';
 		}
 
+		// Анимация удаления элемента
 		if (this.keyElem === key && this.targetElementClassName === 'todo-remove') {
 			this.animate({
-				duration: 500,
+				duration: 900,
 				timing(timeFraction) {
 					return 1 - timeFraction;
 				},
@@ -97,18 +101,18 @@ class ToDo {
 			this.render();
 		} else {
 			const message = document.createElement('div');
-			message.style.position = 'fixed';
 			const coords = this.input.getBoundingClientRect();
-			message.style.zIndex = 10;
-			message.style.width = 250 + 'px';
-			message.style.padding = 5 + 'px';
-			message.style.backgroundColor = 'red';
-			message.style.borderRadius = 20 + 'px';
-			message.style.left = coords.left + 5 + "px";
-			message.style.top = coords.bottom + 5 + "px";
+			message.classList.add('message');
+			message.style.left = coords.left + "px";
+			message.style.top = coords.bottom + "px";
 			message.innerHTML = 'Поле не должно быть пустым!';
+			message.classList.add('shake');
+			this.input.style.border = '1px solid red';
 			document.body.append(message);
-			setTimeout(() => message.remove(), 3000);
+			setTimeout(() => {
+				message.remove();
+				this.input.style.border = 'none';
+			}, 3000);
 		}
 	}
 
@@ -138,10 +142,13 @@ class ToDo {
 	}
 
 	editItem(elem, target) {
-		this.keyElem = elem.key;
-		this.targetElementClassName = target.className;
-		this.render();
-
+		this.todoData.forEach(item => {
+			if (elem.key === item.key) {
+				this.keyElem = elem.key;
+				this.targetElementClassName = target.className;
+				this.render();
+			}
+		}, this);
 	}
 
 	handler(event) {
