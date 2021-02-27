@@ -28,13 +28,25 @@ class ToDo {
 		li.classList.add('todo-item');
 		li.key = todo.key;
 		li.insertAdjacentHTML('beforeend', `
-			<span class="text-todo">${todo.value}</span>
-			<div class="todo-buttons">
-				<button class="todo-remove"></button>
-				<button class="todo-complete"></button>
-			</div>
+		<span class="text-todo">${todo.value}</span>
+		<div class="todo-buttons">
+		<button class="todo-edit"></button>
+		<button class="todo-remove"></button>
+		<button class="todo-complete"></button>
+		</div>
 		`);
 
+		if (this.keyElem === key && this.targetElementClassName === 'todo-edit') {
+			const span = li.querySelector('span');
+			li.setAttribute('contenteditable', 'true');
+			li.classList.add('border');
+			console.log(span.textContent);
+			li.addEventListener('input', setTimeout(() => {
+				console.log('span.textContent: ', span.textContent);
+				todo.value = span.textContent;
+				span.textContent = todo.value;
+			}, 300));
+		}
 
 		if (todo.completed) {
 			this.todoCompleted.append(li);
@@ -125,12 +137,21 @@ class ToDo {
 		}, this);
 	}
 
+	editItem(elem, target) {
+		this.keyElem = elem.key;
+		this.targetElementClassName = target.className;
+		this.render();
+
+	}
+
 	handler(event) {
 		const target = event.target;
 		if (target.matches('.todo-remove')) {
 			this.deleteItem(target.closest('.todo-item'), target);
 		} else if (target.matches('.todo-complete')) {
 			this.completedItem(target.closest('.todo-item'), target);
+		} else if (target.matches('.todo-edit')) {
+			this.editItem(target.closest('.todo-item'), target);
 		}
 	}
 
